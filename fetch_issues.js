@@ -65,7 +65,7 @@ async function main() {
   const keywords = JSON.parse(await fs.readFile('keywords.json'));
   const wiki = makeUniqueByKey((await fetchWikiCategory('Vortex'))
     .map(w => transformWikiPages(w, keywords)),
-    w => w.title);
+                               w => w.title);
   const faq = (await fetchFAQ())
     .map(f => transformFAQ(f, keywords));
   const issues = (await fetchIssues())

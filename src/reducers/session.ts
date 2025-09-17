@@ -9,8 +9,8 @@ export const sessionReducer: types.IReducerSpec = {
   reducers: {
     [actions.setFeedbackType as any]: (state, payload) =>
       util.setSafe(util.setSafe(state,
-        ['feedbackType'], payload.feedbackType),
-        ['feedbackTopic'], payload.feedbackTopic),
+                                ['feedbackType'], payload.feedbackType),
+                   ['feedbackTopic'], payload.feedbackTopic),
     [actions.setFeedbackTitle as any]: (state, payload) =>
       util.setSafe(state, ['feedbackTitle'], payload),
     [actions.setFeedbackMessage as any]: (state, payload) =>

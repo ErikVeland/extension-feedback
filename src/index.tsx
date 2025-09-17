@@ -40,7 +40,7 @@ function findCrashDumps(): Promise<string[]> {
         .map((iterPath: string) => path.join(electronCrashesPath, iterPath))
         .then((electronPaths: string[]) =>
           [].concat(nativeCrashes, electronPaths)))
-    ;
+  ;
 }
 
 enum ErrorType {
@@ -86,28 +86,28 @@ function errorText(type: ErrorType): string {
 function recognisedError(crashDumps: string[]): Promise<ErrorType> {
   return Promise.map(crashDumps, dumpPath =>
     fs.readFileAsync(dumpPath + '.log', { encoding: 'utf-8' })
-    .then(data => {
-      try {
-        const codeLine: string[] = data.split('\r\n').filter(line => line.startsWith('Exception code'));
-        return Promise.resolve(codeLine.map(line => line.split(': ')[1]));
-      } catch (err) {
-        return Promise.reject(new Error('Failed to parse'));
+      .then(data => {
+        try {
+          const codeLine: string[] = data.split('\r\n').filter(line => line.startsWith('Exception code'));
+          return Promise.resolve(codeLine.map(line => line.split(': ')[1]));
+        } catch (err) {
+          return Promise.reject(new Error('Failed to parse'));
+        }
+      })
+      .catch(() => null))
+    .filter((codes: string) => !!codes)
+    .reduce((prev, codes) => prev.concat(codes), [])
+    .filter((code: string) => {
+      const known = KNOWN_ERRORS[code];
+      if (known === undefined) {
+        return false;
       }
+      if (known === ErrorType.APP) {
+        return oldMSXMLLoaded();
+      }
+      return true;
     })
-    .catch(() => null))
-  .filter((codes: string) => !!codes)
-  .reduce((prev, codes) => prev.concat(codes), [])
-  .filter((code: string) => {
-    const known = KNOWN_ERRORS[code];
-    if (known === undefined) {
-      return false;
-    }
-    if (known === ErrorType.APP) {
-      return oldMSXMLLoaded();
-    }
-    return true;
-  })
-  .then(codes => codes.length > 0 ? KNOWN_ERRORS[codes[0]] : undefined);
+    .then(codes => codes.length > 0 ? KNOWN_ERRORS[codes[0]] : undefined);
 }
 
 function reportKnownError(api: types.IExtensionApi, dismiss: () => void, errType: ErrorType) {
@@ -125,12 +125,12 @@ function reportKnownError(api: types.IExtensionApi, dismiss: () => void, errType
 function sendCrashFeedback(api: types.IExtensionApi, dismiss: () => void, crashDumps: string[]) {
   api.store.dispatch(setFeedbackType('bugreport', 'crash'));
   return Promise.map(crashDumps.reduce((prev, iter) => prev.concat(iter, iter + '.log'), []),
-    dump => fs.statAsync(dump)
-      .then(stats => ({ filePath: dump, stats }))
+                     dump => fs.statAsync(dump)
+                       .then(stats => ({ filePath: dump, stats }))
       // This shouldn't happen unless the user deleted the
       //  crashdump before hitting the Send Report button.
       //  Either way the application shouldn't crash; keep going.
-      .catch(err => err.code === 'ENOENT' ? undefined : Promise.reject(err)))
+                       .catch(err => err.code === 'ENOENT' ? undefined : Promise.reject(err)))
     .filter(iter => iter !== undefined)
     .each((iter: { filePath: string, stats: fs.Stats }) => {
       api.store.dispatch(addFeedbackFile({
@@ -160,10 +160,10 @@ function nativeCrashCheck(api: types.IExtensionApi): Promise<void> {
               title: 'Dismiss',
               action: dismiss => {
                 Promise.map(crashDumps,
-                  dump => fs.removeAsync(dump)
-                    .catch(() => undefined)
-                    .then(() => fs.removeAsync(dump + '.log'))
-                    .catch(() => undefined))
+                            dump => fs.removeAsync(dump)
+                              .catch(() => undefined)
+                              .then(() => fs.removeAsync(dump + '.log'))
+                              .catch(() => undefined))
                   .then(() => {
                     log('info', 'crash dumps dismissed');
                     dismiss();
@@ -174,27 +174,27 @@ function nativeCrashCheck(api: types.IExtensionApi): Promise<void> {
 
           if (knownError === undefined) {
             actions.splice(0, 0, {
-                title: 'More',
-                action: dismiss => {
-                  const bbcode = 'The last session of Vortex logged an exception.'
+              title: 'More',
+              action: dismiss => {
+                const bbcode = 'The last session of Vortex logged an exception.'
                     + '<br/><br/>Please visit '
                     + `[url="${WHITESCREEN_THREAD}"]this thread[/url] `
                     + 'for typical reasons causing this.<br/>'
                     + '[color="red"]Please report this issue only if you\'re sure none of '
                     + 'those reasons apply to you![/color]';
 
-                  return api.showDialog('error', 'Exception', {
-                    bbcode,
-                  }, [
-                    {
-                      label: 'Report', action: () => {
-                        sendCrashFeedback(api, dismiss, crashDumps);
-                      },
+                return api.showDialog('error', 'Exception', {
+                  bbcode,
+                }, [
+                  {
+                    label: 'Report', action: () => {
+                      sendCrashFeedback(api, dismiss, crashDumps);
                     },
-                    { label: 'Close' },
-                  ]);
-                },
-              });
+                  },
+                  { label: 'Close' },
+                ]);
+              },
+            });
           } else {
             actions.splice(0, 0, {
               title: 'More',
@@ -210,11 +210,11 @@ function nativeCrashCheck(api: types.IExtensionApi): Promise<void> {
             actions,
           });
         }))
-        .catch(err => {
+    .catch(err => {
           // There is almost certainly a more serious underlying problem but this
           // particular symptom isn't worth reporting
-          log('warn', 'Failed to check for native dumps', err.message);
-        });
+      log('warn', 'Failed to check for native dumps', err.message);
+    });
 }
 
 function readReferenceIssues() {
